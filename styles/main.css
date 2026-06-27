@@ -79,6 +79,7 @@ kbd {
 }
 .nav__inner { display: flex; align-items: center; justify-content: space-between; height: 70px; }
 .brand { display: inline-flex; align-items: center; gap: 0.6rem; }
+.brand__mark { display: block; width: 28px; height: 28px; }
 .brand__name { font-weight: 700; font-size: 1.2rem; color: var(--ink); letter-spacing: -0.02em; }
 .brand__name--light { color: var(--on-dark); }
 .nav__links { display: flex; gap: 0.4rem; }
