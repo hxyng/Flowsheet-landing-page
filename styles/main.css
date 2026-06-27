@@ -121,6 +121,22 @@ kbd {
 .demo-caret { display: inline-block; width: 2px; height: 1.05em; background: var(--green-500); margin-left: 1px; vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
+/* Animated pointer that glides to the Lock button and taps it */
+.demo-cursor {
+  position: absolute; left: 42%; top: 42%; z-index: 6;
+  width: 26px; height: 26px; opacity: 0; pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: left 1.15s var(--ease), top 1.15s var(--ease), opacity 0.45s var(--ease);
+  filter: drop-shadow(0 3px 5px rgba(6, 52, 42, 0.35));
+}
+.demo-cursor.is-active { opacity: 1; }
+.demo-cursor.is-click { animation: cursor-tap 0.42s var(--ease); }
+@keyframes cursor-tap {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  45% { transform: translate(-50%, -50%) scale(0.76); }
+}
+.btn--lock.is-pressed { transform: scale(0.94); filter: brightness(0.93); }
+
 .receipt {
   position: absolute; right: clamp(1rem, 0.5rem + 1vw, 2rem); bottom: clamp(-1rem, -2vw, 0rem);
   width: min(330px, 80%);
@@ -179,8 +195,15 @@ kbd {
 .stakes__foot { max-width: 64ch; margin-top: clamp(2rem, 1rem + 2vw, 3rem); color: var(--on-dark-2); font-size: var(--fs-lead); }
 
 /* ============================ HOW ============================ */
-.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; list-style: none; }
 .step { background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.6rem 1.4rem; box-shadow: var(--shadow-sm); }
+
+/* Staggered scroll reveal: cards rise in one after another */
+.how .step { transition-property: opacity, transform; transition-duration: 0.7s; transition-timing-function: var(--ease); transform: translateY(44px); }
+.how .step.is-in { transform: none; }
+.how .step[data-delay="1"] { transition-delay: 0.12s; }
+.how .step[data-delay="2"] { transition-delay: 0.24s; }
+.how .step[data-delay="3"] { transition-delay: 0.36s; }
 .step__n { font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-sm); color: var(--green-500); }
 .step h3 { font-size: var(--fs-h3); margin: 0.7rem 0 0.55rem; }
 .step p { font-size: var(--fs-sm); color: var(--ink-2); }
@@ -330,4 +353,13 @@ kbd {
   .bar-row { grid-template-columns: 84px 1fr; }
   .voice { width: 280px; }
   .btn--xl { min-height: 62px; padding: 0 1.8rem; font-size: 1.12rem; }
+}
+
+/* ============================ TEXT BALANCE ============================ */
+/* Even out short copy so no line is left holding a single word. */
+.hero__lead, .hero__note, .stakes__foot, .gauge-card__body, .stat p,
+.step p, .graph__note, .prov__lead, .feat p, .who__lead,
+.cta__lead, .cta__note, .apps__label, .footer__brand p,
+.prov__list li, .voice blockquote, .tok-list span {
+  text-wrap: balance;
 }

@@ -99,7 +99,29 @@
     const caretEl = demo.querySelector("[data-caret]");
     const stateChip = demo.querySelector("[data-prov-state]");
     const lockBtn = demo.querySelector("[data-lock]");
+    const cursor = demo.querySelector("[data-cursor]");
     const token = "ebitda[q3]";
+
+    // Glide the pointer to the Lock button, tap it, then lock the value.
+    const moveCursorThenLock = () => {
+      if (reduce || !cursor || !lockBtn) { lock(); return; }
+      const panelRect = demo.getBoundingClientRect();
+      cursor.style.left = (panelRect.width * 0.42) + "px";
+      cursor.style.top = (panelRect.height * 0.42) + "px";
+      cursor.classList.add("is-active");
+      requestAnimationFrame(() => setTimeout(() => {
+        const b = lockBtn.getBoundingClientRect();
+        cursor.style.left = (b.left - panelRect.left + b.width / 2) + "px";
+        cursor.style.top = (b.top - panelRect.top + b.height / 2) + "px";
+      }, 90));
+      setTimeout(() => {
+        cursor.classList.add("is-click");
+        lockBtn.classList.add("is-pressed");
+        setTimeout(() => { lockBtn.classList.remove("is-pressed"); lock(); }, 230);
+        setTimeout(() => cursor.classList.remove("is-click"), 430);
+        setTimeout(() => cursor.classList.remove("is-active"), 1150);
+      }, 90 + 1200);
+    };
 
     const lock = () => {
       if (!stateChip) return;
@@ -120,7 +142,7 @@
         let i = 0;
         const type = () => {
           if (i <= token.length) { tokenEl.textContent = token.slice(0, i); i++; setTimeout(type, 90); }
-          else { if (caretEl) caretEl.style.display = "none"; setTimeout(lock, 2400); }
+          else { if (caretEl) caretEl.style.display = "none"; setTimeout(moveCursorThenLock, 1200); }
         };
         setTimeout(type, 800);
       };
