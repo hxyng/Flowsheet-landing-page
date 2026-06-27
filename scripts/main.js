@@ -100,6 +100,7 @@
     const stateChip = demo.querySelector("[data-prov-state]");
     const lockBtn = demo.querySelector("[data-lock]");
     const cursor = demo.querySelector("[data-cursor]");
+    const receipt = demo.querySelector("[data-prov]");
     const token = "ebitda[q3]";
 
     // Glide the pointer to the Lock button, tap it, then lock the value.
@@ -132,17 +133,24 @@
       if (tokenEl) { tokenEl.textContent = "$128.4M"; tokenEl.style.color = "var(--ink)"; tokenEl.style.fontFamily = "var(--font-sans)"; tokenEl.style.fontWeight = "700"; }
     };
 
+    // Pop the receipt out of the just-typed token (eases in).
+    const popReceipt = () => {
+      if (receipt) { receipt.classList.remove("is-armed"); receipt.classList.add("is-popped"); }
+      if (tokenEl) { tokenEl.classList.add("is-flash"); setTimeout(() => tokenEl.classList.remove("is-flash"), 660); }
+    };
+
     if (reduce) {
       if (tokenEl) tokenEl.textContent = token;
       if (caretEl) caretEl.style.display = "none";
     } else {
+      if (receipt) receipt.classList.add("is-armed");
       let started = false;
       const run = () => {
         if (started) return; started = true;
         let i = 0;
         const type = () => {
           if (i <= token.length) { tokenEl.textContent = token.slice(0, i); i++; setTimeout(type, 90); }
-          else { if (caretEl) caretEl.style.display = "none"; setTimeout(moveCursorThenLock, 1200); }
+          else { if (caretEl) caretEl.style.display = "none"; popReceipt(); setTimeout(moveCursorThenLock, 1400); }
         };
         setTimeout(type, 800);
       };
@@ -154,13 +162,46 @@
     if (lockBtn) lockBtn.addEventListener("click", lock);
   }
 
-  /* ---- CTA form ---- */
-  const form = document.querySelector("[data-form]");
-  if (form) {
-    form.addEventListener("submit", (e) => {
+  /* ---- Email capture ======================================================
+     Set your form endpoint ONCE here. Sign up free at https://formspree.io,
+     create a form, and paste its URL below (Getform / Formspark also work).
+     Every [data-form] on the page submits here over HTTPS via fetch.
+     NOTE: the Content-Security-Policy in vercel.json only allows posting to
+     formspree.io. If you switch providers, add that domain to both
+     connect-src and form-action there, or the browser will block it.        */
+  const FORM_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+  const formReady = FORM_ENDPOINT && !/YOUR_FORM_ID/i.test(FORM_ENDPOINT);
+  if (!formReady) console.warn("[Flowsheet] Email capture is not live yet: set FORM_ENDPOINT in scripts/main.js to your form URL.");
+
+  document.querySelectorAll("[data-form]").forEach((form) => {
+    form.setAttribute("action", FORM_ENDPOINT);
+    const btn = form.querySelector("button");
+    const input = form.querySelector("input[type='email']");
+    const label = btn ? btn.textContent : "";
+    const flash = (msg) => { if (btn) { btn.textContent = msg; setTimeout(() => { btn.textContent = label; }, 2600); } };
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const input = form.querySelector("input"); const btn = form.querySelector("button");
-      if (input && input.checkValidity()) { btn.textContent = "Thanks. Check your inbox."; btn.classList.add("is-locked"); input.value = ""; }
+      if (!input || !input.checkValidity()) { if (input) input.reportValidity(); return; }
+      if (!formReady) { flash("Add your form endpoint"); return; }
+      if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
+      try {
+        const res = await fetch(FORM_ENDPOINT, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: new FormData(form),
+        });
+        if (res.ok) {
+          input.value = "";
+          if (btn) { btn.textContent = "Thanks. You are on the list."; btn.classList.add("is-locked"); }
+        } else {
+          if (btn) btn.disabled = false;
+          flash("Something went wrong");
+        }
+      } catch (_) {
+        if (btn) btn.disabled = false;
+        flash("Network error, try again");
+      }
     });
-  }
+  });
 })();
