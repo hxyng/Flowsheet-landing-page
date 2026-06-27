@@ -1,0 +1,15 @@
+{
+  "name": "flowsheet-landing-page",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marketing landing page for FlowSheet, built in a Tesla-inspired design language.",
+  "scripts": {
+    "dev": "serve -l 4321 .",
+    "serve": "serve -l 4321 .",
+    "shot": "node tools/screenshot.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1",
+    "serve": "^14.2.4"
+  }
+}

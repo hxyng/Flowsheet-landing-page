@@ -1,0 +1,104 @@
+/* ==========================================================================
+   FlowSheet design tokens
+   Foundation: Tesla design language (radical subtraction, flat surfaces,
+   precise restrained type, 4px radius, 0.33s transitions, whitespace as luxury).
+   Extension: a color-theory palette anchored on Tesla Electric Blue.
+
+   Color theory used here:
+     - Analogous harmony  : blue, indigo, cyan sit close on the wheel and read
+                            as one calm, trustworthy family (the "data/flow" set).
+     - Complementary pop  : amber sits opposite blue (~44 deg vs ~224 deg) and is
+                            reserved for the single highest-energy moment (the lock).
+     - Functional semantics: green for verified/ratified, rose for attention.
+   The base stays white-dominant and flat, true to Tesla. Color is used with
+   restraint, to mean something, never as decoration.
+   ========================================================================== */
+
+:root {
+  /* ---- Anchor: analogous cool family (trust, precision, flow) ------------ */
+  --blue: #3e6ae1;          /* Tesla Electric Blue, primary action            */
+  --blue-strong: #2f55c2;   /* hover / pressed                                */
+  --blue-soft: #eaf0fd;     /* tinted surface                                 */
+  --indigo: #5a4bdb;        /* analogous neighbor, deep accent               */
+  --cyan: #15b8c7;          /* analogous neighbor, the "flow" hue            */
+  --cyan-soft: #e3f7f9;
+
+  /* ---- Complement: warm pop, used only for the lock/ratify moment -------- */
+  --amber: #f5a623;
+  --amber-strong: #e08f0c;
+  --amber-soft: #fdf2dc;
+
+  /* ---- Functional semantics --------------------------------------------- */
+  --green: #1fa971;         /* verified / ratified                           */
+  --green-soft: #e4f6ee;
+  --rose: #e25570;          /* attention / error, sparing                    */
+  --rose-soft: #fdeaee;
+
+  /* ---- Tesla neutrals ---------------------------------------------------- */
+  --carbon: #171a20;        /* darkest text, dark surfaces                    */
+  --graphite: #393c41;      /* body text                                     */
+  --pewter: #5c5e62;        /* tertiary text                                 */
+  --silver-fog: #8e8e8e;    /* placeholder, disabled                         */
+  --pale-silver: #d0d1d2;   /* subtle borders                                */
+  --cloud: #eeeeee;         /* dividers                                       */
+  --ash: #f4f4f4;           /* alternate surface                             */
+  --white: #ffffff;
+
+  /* ---- Semantic roles --------------------------------------------------- */
+  --bg: var(--white);
+  --bg-alt: var(--ash);
+  --bg-dark: var(--carbon);
+  --text: var(--carbon);
+  --text-body: var(--graphite);
+  --text-muted: var(--pewter);
+  --border: var(--cloud);
+  --accent: var(--blue);
+
+  /* ---- Gradients (depth via hue, not shadow) ---------------------------- */
+  --grad-flow: linear-gradient(120deg, var(--indigo) 0%, var(--blue) 46%, var(--cyan) 100%);
+  --grad-flow-soft: linear-gradient(120deg, #f1effd 0%, #eaf0fd 50%, #e3f7f9 100%);
+
+  /* ---- Type --------------------------------------------------------------
+     Tesla uses Universal Sans (proprietary). Inter is the closest widely
+     available analog: geometric precision with humanist terminals. We honor
+     Tesla's two-weight restraint (400 / 500, with 600 only at display scale)
+     and "normal" letter-spacing.                                            */
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-text: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+
+  /* Fluid display scale. Tesla caps web hero near 40px; a marketing hero
+     needs more presence, so we scale from 40px (mobile) up, keeping weight
+     and restraint intact. */
+  --fs-hero: clamp(2.5rem, 1.7rem + 3vw, 4rem);
+  --fs-h2: clamp(2rem, 1.3rem + 3.2vw, 3.5rem);
+  --fs-h3: clamp(1.375rem, 1.1rem + 1.4vw, 2rem);
+  --fs-lead: clamp(1.0625rem, 1rem + 0.5vw, 1.375rem);
+  --fs-body: 1rem;
+  --fs-sm: 0.875rem;
+  --fs-xs: 0.8125rem;
+
+  /* ---- Spacing (8px base) ------------------------------------------------ */
+  --s-1: 0.5rem;
+  --s-2: 1rem;
+  --s-3: 1.5rem;
+  --s-4: 2rem;
+  --s-5: 3rem;
+  --s-6: 4rem;
+  --s-7: 6rem;
+  --s-8: 8rem;
+  --container: 1240px;
+  --container-wide: 1440px;
+  --page-x: clamp(1.25rem, 0.5rem + 3vw, 5rem);
+
+  /* ---- Radius (Tesla: sharp default, 4px on controls) ------------------- */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* ---- Motion (Tesla: 0.33s universal) --------------------------------- */
+  --ease: cubic-bezier(0.5, 0, 0, 0.75);
+  --dur: 0.33s;
+}
