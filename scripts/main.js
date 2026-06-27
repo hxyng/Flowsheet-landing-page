@@ -204,13 +204,30 @@
     const btn = form.querySelector("button");
     const input = form.querySelector("input[type='email']");
     const label = btn ? btn.textContent : "";
-    const flash = (msg) => { if (btn) { btn.textContent = msg; setTimeout(() => { btn.textContent = label; }, 2600); } };
+
+    // Status note lives BELOW the form so the button text never grows and
+    // wraps the layout.
+    const setNote = (text) => {
+      let n = form.nextElementSibling;
+      if (!n || !n.classList.contains("form-note")) {
+        n = document.createElement("p");
+        n.className = "form-note";
+        n.setAttribute("role", "status");
+        form.insertAdjacentElement("afterend", n);
+      }
+      n.textContent = text;
+    };
+    const clearNote = () => {
+      const n = form.nextElementSibling;
+      if (n && n.classList.contains("form-note")) n.remove();
+    };
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!input || !input.checkValidity()) { if (input) input.reportValidity(); return; }
-      if (!formReady) { flash("Add your form endpoint"); return; }
-      if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
+      if (!formReady) { setNote("Add your form endpoint in scripts/main.js."); return; }
+      clearNote();
+      if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
       try {
         const res = await fetch(FORM_ENDPOINT, {
           method: "POST",
@@ -218,15 +235,18 @@
           body: new FormData(form),
         });
         if (res.ok) {
-          input.value = "";
-          if (btn) { btn.textContent = "Thanks. You are on the list."; btn.classList.add("is-locked"); }
+          const done = document.createElement("p");
+          done.className = "form-success";
+          done.setAttribute("role", "status");
+          done.textContent = "Thanks, you're on the list.";
+          form.replaceWith(done); // swap the whole form for a clean confirmation
         } else {
-          if (btn) btn.disabled = false;
-          flash("Something went wrong");
+          if (btn) { btn.disabled = false; btn.textContent = label; }
+          setNote("Something went wrong. Please try again.");
         }
       } catch (_) {
-        if (btn) btn.disabled = false;
-        flash("Network error, try again");
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+        setNote("Network error. Please try again.");
       }
     });
   });

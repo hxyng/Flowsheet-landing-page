@@ -112,6 +112,16 @@ kbd {
 .hero__form .btn--xl { flex: 0 0 auto; }
 .hero__note { font-size: var(--fs-sm); color: var(--ink-3); }
 
+/* Form confirmation + error note (kept out of the button so it never wraps) */
+.form-success {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  margin: 2.4rem auto 1.2rem; padding: 0.85rem 1.6rem;
+  font-weight: 600; color: var(--green-700);
+  background: var(--green-50); border: 1px solid var(--green-100); border-radius: var(--r-pill);
+}
+.form-success::before { content: "\2713"; color: var(--green-500); font-weight: 700; }
+.form-note { margin-top: 0.9rem; font-size: var(--fs-sm); color: var(--coral); }
+
 .hero__stage { margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem); }
 .panel {
   position: relative; max-width: 940px; margin-inline: auto;
