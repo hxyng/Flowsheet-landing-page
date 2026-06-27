@@ -58,7 +58,10 @@ h1, h2, h3, h4 {
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.02em;
+  text-wrap: balance; /* avoid a lone word on the last line */
 }
+
+p { text-wrap: pretty; } /* prevent single-word widows in body copy */
 
 em, .serif-em {
   font-family: var(--font-serif);
@@ -94,7 +97,7 @@ em, .serif-em {
   color: var(--green-600);
 }
 .eyebrow::before {
-  content: ""; width: 22px; height: 1px; background: var(--green-500); opacity: 0.7;
+  content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--green-500); opacity: 0.95;
 }
 
 /* ---- Dark section wrapper --------------------------------------------- */

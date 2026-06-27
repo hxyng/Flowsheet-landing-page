@@ -14,6 +14,8 @@
               border-color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 .btn--lg { min-height: 54px; padding: 0 1.9rem; font-size: 1.05rem; }
+.btn--xl { min-height: 72px; padding: 0 3rem; font-size: 1.3rem; gap: 0.7rem; box-shadow: 0 18px 40px -16px rgba(20, 160, 111, 0.75); }
+.btn--xl svg { width: 22px; height: 22px; }
 .btn--primary { background: var(--green-400); color: var(--accent-ink); box-shadow: 0 10px 24px -12px rgba(20, 160, 111, 0.7); }
 .btn--primary:hover { background: var(--green-500); transform: translateY(-2px); box-shadow: 0 16px 30px -14px rgba(20, 160, 111, 0.8); }
 .btn--soft { background: var(--green-50); color: var(--green-700); border-color: var(--green-100); }
@@ -93,8 +95,12 @@ kbd {
 .hero__inner { text-align: center; }
 .hero__title { font-size: var(--fs-display); font-weight: 600; letter-spacing: -0.035em; margin: 1.1rem 0 1.4rem; }
 .hero__title em { color: var(--green-500); font-size: 1.04em; }
+.hero__title .hero__token {
+  font-family: var(--font-mono); font-style: normal; font-weight: 600;
+  font-size: 0.82em; letter-spacing: -0.02em; color: var(--green-500);
+}
 .hero__lead { font-size: var(--fs-lead); color: var(--ink-2); }
-.hero__actions { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0 1rem; }
+.hero__actions { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin: 2.6rem 0 1.2rem; }
 .hero__note { font-size: var(--fs-sm); color: var(--ink-3); }
 
 .hero__stage { margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem); }
@@ -157,9 +163,9 @@ kbd {
 .gauge__track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 16; }
 .gauge__fill { fill: none; stroke: url(#none); stroke: var(--green-400); stroke-width: 16; stroke-linecap: round;
   stroke-dasharray: 528; stroke-dashoffset: 528; transition: stroke-dashoffset 1.6s var(--ease); }
-.gauge__center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; }
+.gauge__center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; padding-inline: 24%; text-align: center; }
 .gauge__num { font-size: clamp(2.4rem, 1.6rem + 3vw, 3.4rem); font-weight: 700; color: var(--on-dark); letter-spacing: -0.03em; line-height: 1; }
-.gauge__label { font-size: var(--fs-xs); color: var(--on-dark-3); font-family: var(--font-mono); }
+.gauge__label { font-size: 0.7rem; line-height: 1.3; color: var(--on-dark-3); font-family: var(--font-mono); }
 .gauge-card__body { color: var(--on-dark-2); margin: 1.1rem 0 0.75rem; }
 .src { font-family: var(--font-mono); font-size: 0.72rem; color: var(--on-dark-3); }
 
@@ -276,7 +282,7 @@ kbd {
 .voices .marquee--cards { margin-top: clamp(2rem, 1rem + 3vw, 3.5rem); }
 .marquee--cards .marquee__track { gap: 1.25rem; animation-duration: 56s; }
 .voice { width: 360px; flex: none; background: var(--green-800); border: 1px solid var(--line-dark); border-radius: var(--r-lg); padding: 1.6rem; }
-.voice blockquote { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; line-height: 1.45; color: var(--on-dark); margin-bottom: 1rem; }
+.voice blockquote { font-family: var(--font-sans); font-style: normal; font-weight: 400; font-size: 1.0625rem; line-height: 1.55; color: var(--on-dark); margin-bottom: 1rem; }
 .voice figcaption { font-size: var(--fs-sm); font-weight: 600; color: var(--green-300); }
 
 /* ============================ CTA ============================ */
@@ -309,7 +315,7 @@ kbd {
   .feat--wide { grid-column: span 2; }
 }
 @media (max-width: 860px) {
-  .nav__links, .nav__cta .btn--ghost { display: none; }
+  .nav__links, .nav__cta .btn { display: none; }
   .nav__burger { display: flex; }
   .stakes__grid, .graphs__grid, .prov__grid, .footer__inner { grid-template-columns: 1fr; }
   .receipt { position: relative; right: 0; bottom: 0; width: 100%; margin-top: 1.25rem; }
@@ -323,4 +329,5 @@ kbd {
   .cta__form input { min-width: 100%; }
   .bar-row { grid-template-columns: 84px 1fr; }
   .voice { width: 280px; }
+  .btn--xl { min-height: 62px; padding: 0 1.8rem; font-size: 1.12rem; }
 }
