@@ -195,7 +195,7 @@
      NOTE: the Content-Security-Policy in vercel.json only allows posting to
      formspree.io. If you switch providers, add that domain to both
      connect-src and form-action there, or the browser will block it.        */
-  const FORM_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+  const FORM_ENDPOINT = "https://formspree.io/f/mojowjzr";
   const formReady = FORM_ENDPOINT && !/YOUR_FORM_ID/i.test(FORM_ENDPOINT);
   if (!formReady) console.warn("[Flowsheet] Email capture is not live yet: set FORM_ENDPOINT in scripts/main.js to your form URL.");
 
