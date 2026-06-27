@@ -149,9 +149,19 @@
       if (tokenEl) { tokenEl.textContent = "$128.4M"; tokenEl.style.color = "var(--ink)"; tokenEl.style.fontFamily = "var(--font-sans)"; tokenEl.style.fontWeight = "700"; }
     };
 
-    // Pop the receipt out of the just-typed token (eases in).
+    // Zoom the receipt out of the just-typed token: set the scale origin to
+    // the token's center (relative to the receipt's box), then scale up.
     const popReceipt = () => {
-      if (receipt) { receipt.classList.remove("is-armed"); receipt.classList.add("is-popped"); }
+      if (receipt && tokenEl) {
+        const pRect = demo.getBoundingClientRect();        // offsetParent of the receipt
+        const tRect = tokenEl.getBoundingClientRect();      // the ebitda[q3] value
+        const ox = (tRect.left - pRect.left + tRect.width / 2) - receipt.offsetLeft;
+        const oy = (tRect.top - pRect.top + tRect.height / 2) - receipt.offsetTop;
+        receipt.style.transformOrigin = ox + "px " + oy + "px";
+        void receipt.offsetWidth; // commit origin before the scale transition runs
+        receipt.classList.remove("is-armed");
+        receipt.classList.add("is-popped");
+      }
       if (tokenEl) { tokenEl.classList.add("is-flash"); setTimeout(() => tokenEl.classList.remove("is-flash"), 660); }
     };
 

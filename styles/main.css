@@ -151,12 +151,12 @@ kbd {
   width: min(330px, 80%);
   background: var(--paper-2); border: 1px solid var(--line);
   border-radius: var(--r-md); box-shadow: var(--shadow-md); padding: 1.1rem 1.2rem;
-  transform-origin: top left;
-  transition: opacity 0.4s ease-in, transform 0.5s ease-in;
+  transform-origin: center; /* JS sets this to the ebitda[q3] token */
+  transition: opacity 0.5s ease-out, transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
 }
-/* Pops out of the typed token: armed (hidden, small, nudged toward the
-   reference) then eases in to place. JS drives it so no-JS keeps it visible. */
-.receipt.is-armed { opacity: 0; transform: translate(-18px, -14px) scale(0.6); transition: none; }
+/* Zooms out of the typed token: armed (collapsed onto the token) then
+   smoothly scales up to place. JS drives it so no-JS keeps it visible. */
+.receipt.is-armed { opacity: 0; transform: scale(0.08); transition: none; }
 .receipt.is-popped { opacity: 1; transform: none; }
 @keyframes token-pop {
   0% { background: rgba(31, 194, 133, 0); }
