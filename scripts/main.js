@@ -6,6 +6,22 @@
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const GAUGE_CIRC = 2 * Math.PI * 84; // r=84
 
+  /* ---- Smooth, slick momentum scroll (Lenis) ---- */
+  if (!reduce && window.Lenis) {
+    const lenis = new Lenis({ lerp: 0.09, smoothWheel: true, wheelMultiplier: 1 });
+    const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+    // keep in-page anchors gliding instead of jumping
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if (!href || href.length < 2) return;
+        const el = document.querySelector(href);
+        if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -72 }); }
+      });
+    });
+  }
+
   /* ---- Sticky nav ---- */
   const nav = document.querySelector("[data-nav]");
   const onScroll = () => nav && nav.classList.toggle("is-scrolled", window.scrollY > 12);
