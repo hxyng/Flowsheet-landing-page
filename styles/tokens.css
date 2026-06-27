@@ -1,104 +1,109 @@
 /* ==========================================================================
-   FlowSheet design tokens
-   Foundation: Tesla design language (radical subtraction, flat surfaces,
-   precise restrained type, 4px radius, 0.33s transitions, whitespace as luxury).
-   Extension: a color-theory palette anchored on Tesla Electric Blue.
+   Flowsheet design tokens
+   Style: inspired by Wispr Flow (EB Garamond serif italics + Figtree sans,
+   flowing marquees, soft decorative SVG, rounded UI).
+   Spin: primarily GREEN, light grid background with quiet ambient glows,
+   alternating light and dark forest sections, data graphs throughout.
 
-   Color theory used here:
-     - Analogous harmony  : blue, indigo, cyan sit close on the wheel and read
-                            as one calm, trustworthy family (the "data/flow" set).
-     - Complementary pop  : amber sits opposite blue (~44 deg vs ~224 deg) and is
-                            reserved for the single highest-energy moment (the lock).
-     - Functional semantics: green for verified/ratified, rose for attention.
-   The base stays white-dominant and flat, true to Tesla. Color is used with
-   restraint, to mean something, never as decoration.
+   Color theory:
+     - Green is the brand anchor (trust, money, verified, "ratified").
+       A full forest-to-emerald ramp carries both the dark sections and the
+       light accents, so the page reads green without feeling flat.
+     - Complementary warm (amber) and analogous (teal) are reserved for data
+       series in the graphs and the occasional highlight, never for chrome.
+     - Coral marks risk (the stakes section) since it sits opposite green and
+       reads as caution without shouting.
    ========================================================================== */
 
 :root {
-  /* ---- Anchor: analogous cool family (trust, precision, flow) ------------ */
-  --blue: #3e6ae1;          /* Tesla Electric Blue, primary action            */
-  --blue-strong: #2f55c2;   /* hover / pressed                                */
-  --blue-soft: #eaf0fd;     /* tinted surface                                 */
-  --indigo: #5a4bdb;        /* analogous neighbor, deep accent               */
-  --cyan: #15b8c7;          /* analogous neighbor, the "flow" hue            */
-  --cyan-soft: #e3f7f9;
+  /* ---- Green ramp (the brand) ------------------------------------------- */
+  --green-950: #04231b;   /* deepest, footer / darkest surfaces             */
+  --green-900: #06342a;   /* dark section background                        */
+  --green-800: #0a4636;   /* dark section alt                               */
+  --green-700: #0e5a44;   /* deep accent                                    */
+  --green-600: #11785a;
+  --green-500: #14a06f;   /* mid                                            */
+  --green-400: #1fc285;   /* primary action / emerald                       */
+  --green-300: #5bd6a6;
+  --green-200: #9fe7c8;
+  --green-100: #d4f4e4;
+  --green-50:  #eafaf1;   /* soft tint surface                             */
 
-  /* ---- Complement: warm pop, used only for the lock/ratify moment -------- */
-  --amber: #f5a623;
-  --amber-strong: #e08f0c;
-  --amber-soft: #fdf2dc;
+  /* ---- Light canvas (warm-cool off white with a green whisper) --------- */
+  --paper: #f3f7f2;       /* page background                                */
+  --paper-2: #fbfdfa;     /* cards on light                                 */
+  --cream: #fcfdf8;
 
-  /* ---- Functional semantics --------------------------------------------- */
-  --green: #1fa971;         /* verified / ratified                           */
-  --green-soft: #e4f6ee;
-  --rose: #e25570;          /* attention / error, sparing                    */
-  --rose-soft: #fdeaee;
+  /* ---- Data-series accents (graphs only) ------------------------------- */
+  --amber: #f2a73b;       /* complementary warm                            */
+  --teal: #16b6c2;        /* analogous cool                                */
+  --coral: #ef6f5e;       /* risk / caution                               */
+  --violet: #8a7bf0;      /* extra series if needed                        */
 
-  /* ---- Tesla neutrals ---------------------------------------------------- */
-  --carbon: #171a20;        /* darkest text, dark surfaces                    */
-  --graphite: #393c41;      /* body text                                     */
-  --pewter: #5c5e62;        /* tertiary text                                 */
-  --silver-fog: #8e8e8e;    /* placeholder, disabled                         */
-  --pale-silver: #d0d1d2;   /* subtle borders                                */
-  --cloud: #eeeeee;         /* dividers                                       */
-  --ash: #f4f4f4;           /* alternate surface                             */
-  --white: #ffffff;
+  /* ---- Ink + neutrals --------------------------------------------------- */
+  --ink: #0f1f18;         /* darkest text on light                         */
+  --ink-2: #34463d;       /* body text on light                            */
+  --ink-3: #647469;       /* muted text on light                           */
+  --line: #dde7dd;        /* hairline borders on light                     */
+  --line-strong: #c7d4c7;
+  --grid-line: rgba(14, 90, 68, 0.06); /* the light grid                   */
+
+  /* on dark */
+  --on-dark: #eaf4ec;     /* primary text on dark                          */
+  --on-dark-2: #a9c4b6;   /* body on dark                                  */
+  --on-dark-3: #6f8d7e;   /* muted on dark                                 */
+  --line-dark: rgba(159, 231, 200, 0.16);
+  --grid-line-dark: rgba(159, 231, 200, 0.07);
 
   /* ---- Semantic roles --------------------------------------------------- */
-  --bg: var(--white);
-  --bg-alt: var(--ash);
-  --bg-dark: var(--carbon);
-  --text: var(--carbon);
-  --text-body: var(--graphite);
-  --text-muted: var(--pewter);
-  --border: var(--cloud);
-  --accent: var(--blue);
+  --bg: var(--paper);
+  --accent: var(--green-400);
+  --accent-strong: var(--green-500);
+  --accent-ink: #04281d;   /* text on emerald buttons                      */
 
-  /* ---- Gradients (depth via hue, not shadow) ---------------------------- */
-  --grad-flow: linear-gradient(120deg, var(--indigo) 0%, var(--blue) 46%, var(--cyan) 100%);
-  --grad-flow-soft: linear-gradient(120deg, #f1effd 0%, #eaf0fd 50%, #e3f7f9 100%);
+  /* ---- Gradients -------------------------------------------------------- */
+  --grad-green: linear-gradient(120deg, var(--green-700) 0%, var(--green-500) 50%, var(--green-400) 100%);
+  --grad-emerald: linear-gradient(135deg, var(--green-400), var(--green-300));
+  --glow-green: radial-gradient(closest-side, rgba(31, 194, 133, 0.28), rgba(31, 194, 133, 0));
+  --glow-teal: radial-gradient(closest-side, rgba(22, 182, 194, 0.22), rgba(22, 182, 194, 0));
+  --glow-amber: radial-gradient(closest-side, rgba(242, 167, 59, 0.20), rgba(242, 167, 59, 0));
 
-  /* ---- Type --------------------------------------------------------------
-     Tesla uses Universal Sans (proprietary). Inter is the closest widely
-     available analog: geometric precision with humanist terminals. We honor
-     Tesla's two-weight restraint (400 / 500, with 600 only at display scale)
-     and "normal" letter-spacing.                                            */
-  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  --font-text: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+  /* ---- Type -------------------------------------------------------------
+     Figtree for UI/body, EB Garamond for serif italic emphasis (the Wispr
+     signature), JetBrains Mono for tokens and figures.                     */
+  --font-sans: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-serif: "EB Garamond", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 
-  /* Fluid display scale. Tesla caps web hero near 40px; a marketing hero
-     needs more presence, so we scale from 40px (mobile) up, keeping weight
-     and restraint intact. */
-  --fs-hero: clamp(2.5rem, 1.7rem + 3vw, 4rem);
-  --fs-h2: clamp(2rem, 1.3rem + 3.2vw, 3.5rem);
-  --fs-h3: clamp(1.375rem, 1.1rem + 1.4vw, 2rem);
-  --fs-lead: clamp(1.0625rem, 1rem + 0.5vw, 1.375rem);
-  --fs-body: 1rem;
-  --fs-sm: 0.875rem;
+  --fs-display: clamp(2.75rem, 1.4rem + 6vw, 6rem);
+  --fs-h1: clamp(2.25rem, 1.4rem + 4vw, 4.25rem);
+  --fs-h2: clamp(1.9rem, 1.3rem + 2.8vw, 3.25rem);
+  --fs-h3: clamp(1.3rem, 1.05rem + 1.2vw, 1.85rem);
+  --fs-lead: clamp(1.0625rem, 0.98rem + 0.5vw, 1.375rem);
+  --fs-body: 1.0625rem;
+  --fs-sm: 0.9375rem;
   --fs-xs: 0.8125rem;
 
-  /* ---- Spacing (8px base) ------------------------------------------------ */
-  --s-1: 0.5rem;
-  --s-2: 1rem;
-  --s-3: 1.5rem;
-  --s-4: 2rem;
-  --s-5: 3rem;
-  --s-6: 4rem;
-  --s-7: 6rem;
-  --s-8: 8rem;
-  --container: 1240px;
-  --container-wide: 1440px;
-  --page-x: clamp(1.25rem, 0.5rem + 3vw, 5rem);
+  /* ---- Spacing (8px base) ----------------------------------------------- */
+  --s-1: 0.5rem; --s-2: 1rem; --s-3: 1.5rem; --s-4: 2rem;
+  --s-5: 3rem; --s-6: 4rem; --s-7: 6rem; --s-8: 8rem;
+  --container: 1200px;
+  --container-wide: 1320px;
+  --page-x: clamp(1.25rem, 0.5rem + 3vw, 4rem);
 
-  /* ---- Radius (Tesla: sharp default, 4px on controls) ------------------- */
-  --r-xs: 4px;
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
+  /* ---- Radius (Wispr is friendly and rounded) --------------------------- */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
   --r-pill: 999px;
 
-  /* ---- Motion (Tesla: 0.33s universal) --------------------------------- */
-  --ease: cubic-bezier(0.5, 0, 0, 0.75);
-  --dur: 0.33s;
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 0.4s;
+
+  /* ---- Elevation (soft, warm green-tinted) ------------------------------ */
+  --shadow-sm: 0 2px 10px -4px rgba(6, 52, 42, 0.18);
+  --shadow-md: 0 18px 40px -22px rgba(6, 52, 42, 0.30);
+  --shadow-lg: 0 40px 80px -40px rgba(6, 52, 42, 0.40);
 }

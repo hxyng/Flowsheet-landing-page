@@ -94,10 +94,9 @@ async function shoot(browser, base, { width, height, label }) {
   // rather than mid-animation opacity:0 sections.
   await page.evaluate(() => {
     document.querySelectorAll(".reveal").forEach((el) => el.classList.add("is-in"));
-    const card = document.querySelector("[data-prov]");
-    if (card) card.classList.add("is-shown");
+    if (typeof window.__finalizeCharts === "function") window.__finalizeCharts();
   });
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
   const file = path.join(OUT, `${label}-${tag}.png`);
   await page.screenshot({ path: file, fullPage: true });
   console.log("saved", file);
@@ -115,13 +114,15 @@ if (sel) {
   const page = await ctx.newPage();
   await page.goto(base, { waitUntil: "networkidle", timeout: 60000 });
   try { await page.evaluate(() => document.fonts && document.fonts.ready); } catch {}
-  await page.evaluate(() => {
-    document.querySelectorAll(".reveal").forEach((el) => el.classList.add("is-in"));
-    const card = document.querySelector("[data-prov]");
-    if (card) card.classList.add("is-shown");
-  });
-  await page.waitForTimeout(500);
   const el = await page.$(sel);
+  await el.scrollIntoViewIfNeeded();
+  // let intersection-driven animations run to completion, then pin final state
+  await page.waitForTimeout(2400);
+  await page.evaluate(() => {
+    document.querySelectorAll(".reveal").forEach((e) => e.classList.add("is-in"));
+    if (typeof window.__finalizeCharts === "function") window.__finalizeCharts();
+  });
+  await page.waitForTimeout(300);
   const file = path.join(OUT, `sel-${tag}.png`);
   await el.screenshot({ path: file });
   console.log("saved", file);
