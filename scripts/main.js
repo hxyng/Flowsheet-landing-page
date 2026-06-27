@@ -82,7 +82,7 @@
   if ("IntersectionObserver" in window && !reduce) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) { trigger(e.target); io.unobserve(e.target); } });
-    }, { threshold: 0.18, rootMargin: "0px 0px -6% 0px" });
+    }, { threshold: 0.08, rootMargin: "0px 0px 6% 0px" });
 
     document.querySelectorAll(".reveal, [data-linechart], [data-gauge]").forEach((el) => io.observe(el));
     // chips stagger setup up front
