@@ -453,6 +453,11 @@ kbd {
    video's split sits a little below center, so the "With" label is nudged
    past the midline to land at the top of the lower half. */
 .demo-video__labels { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.demo-video__divider {
+  position: absolute; left: 0; right: 0; top: 57%;
+  height: 2px; background: var(--green-400);
+  box-shadow: 0 0 16px 1px rgba(31, 194, 133, 0.5);
+}
 .demo-video__label {
   position: absolute;
   left: clamp(0.7rem, 0.2rem + 1.6vw, 1.5rem);
