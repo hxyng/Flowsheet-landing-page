@@ -188,6 +188,26 @@
     if (lockBtn) lockBtn.addEventListener("click", lock);
   }
 
+  /* ---- Social-proof counter ===============================================
+     Counts up to the starting number on load (set via data-signups in the
+     HTML), and ticks +1 whenever someone joins from this page.              */
+  const signupEl = document.querySelector("[data-signups]");
+  let signups = signupEl ? parseInt(signupEl.dataset.signups, 10) || 0 : 0;
+  const groupNum = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const renderSignups = (n) => { if (signupEl) signupEl.textContent = groupNum(n); };
+  if (signupEl) {
+    if (reduce) { renderSignups(signups); }
+    else {
+      const target = signups, t0 = performance.now(), dur = 1500;
+      const tick = (now) => {
+        const p = Math.min(1, (now - t0) / dur);
+        renderSignups(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+
   /* ---- Email capture ======================================================
      Set your form endpoint ONCE here. Sign up free at https://formspree.io,
      create a form, and paste its URL below (Getform / Formspark also work).
@@ -240,6 +260,7 @@
           done.setAttribute("role", "status");
           done.textContent = "Thanks, you're on the list.";
           form.replaceWith(done); // swap the whole form for a clean confirmation
+          if (signupEl) { signups += 1; renderSignups(signups); } // bump the live count
         } else {
           if (btn) { btn.disabled = false; btn.textContent = label; }
           setNote("Something went wrong. Please try again.");
