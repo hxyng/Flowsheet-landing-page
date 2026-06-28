@@ -351,4 +351,54 @@
       }
     });
   });
+
+  /* ---- Sticky scroll demo video ===========================================
+     The video section is taller than the viewport and pins its frame, which
+     scales up from a rounded card to full size as the section scrolls past.
+     Plays muted in view (autoplay-safe); a button toggles sound.            */
+  const videoSection = document.querySelector("[data-video-scroll]");
+  if (videoSection) {
+    const frame = videoSection.querySelector("[data-video-frame]");
+    const video = videoSection.querySelector("[data-video]");
+    const soundBtn = videoSection.querySelector("[data-video-sound]");
+
+    if (frame && !reduce) {
+      let ticking = false;
+      const applyScale = () => {
+        ticking = false;
+        const rect = videoSection.getBoundingClientRect();
+        const travel = rect.height - window.innerHeight;
+        const p = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+        const grow = Math.min(1, p / 0.55);            // reach full size at 55%
+        const eased = 1 - Math.pow(1 - grow, 3);
+        frame.style.transform = "scale(" + (0.86 + 0.14 * eased).toFixed(4) + ")";
+        frame.style.borderRadius = (32 - 18 * eased).toFixed(1) + "px";
+      };
+      const tickVideo = () => { if (!ticking) { ticking = true; requestAnimationFrame(applyScale); } };
+      applyScale();
+      window.addEventListener("scroll", tickVideo, { passive: true });
+      window.addEventListener("resize", applyScale);
+    }
+
+    if (video) {
+      // Play only while on screen; pause when scrolled away.
+      if ("IntersectionObserver" in window) {
+        const vio = new IntersectionObserver((entries) => entries.forEach((e) => {
+          if (e.isIntersecting) video.play().catch(() => {});
+          else video.pause();
+        }), { threshold: 0.2 });
+        vio.observe(video);
+      } else {
+        video.play().catch(() => {});
+      }
+      if (soundBtn) {
+        soundBtn.addEventListener("click", () => {
+          video.muted = !video.muted;
+          videoSection.classList.toggle("is-muted", video.muted);
+          soundBtn.setAttribute("aria-label", video.muted ? "Unmute video" : "Mute video");
+          if (!video.muted) video.play().catch(() => {});
+        });
+      }
+    }
+  }
 })();
