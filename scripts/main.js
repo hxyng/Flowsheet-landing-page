@@ -190,21 +190,28 @@
 
   /* ---- Social-proof counter (rolling-digit odometer) ======================
      The number is real: it comes from /api/signups (Upstash-backed). Each
-     digit rolls into place — up from zero to the live total on load, and to
-     the new total when someone joins. data-signups is only a fallback so the
-     page never shows a broken value if the API is briefly unreachable.       */
+     digit spins through several full 0–9 rotations before landing — the units
+     digit spins the most and settles last, for a slot-machine wind-down. It
+     spins up from zero on load and re-tallies when someone joins. data-signups
+     is only a fallback so the page never shows a broken value.               */
   const SIGNUPS_API = "/api/signups";
+  const SPINS_BASE = 5;   // base full 0–9 rotations per column
+  const SPIN_STEP = 1;    // extra rotations toward the less-significant digits
+  const DUR_BASE = 1.5;   // seconds for the most-significant column
+  const DUR_STEP = 0.4;   // extra seconds toward the less-significant digits
   const signupEl = document.querySelector(".odometer");
   const odoA11y = document.querySelector("[data-signups-a11y]");
   const fallbackCount = signupEl ? parseInt(signupEl.dataset.signups, 10) || 0 : 0;
   let signups = fallbackCount;
   const groupNum = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  let odoCols = [], odoLen = 0;
+  let odoCols = [];
 
-  // Build one column (a vertical 0–9 strip) per digit, with comma separators.
-  const buildOdometer = (len) => {
+  // Build a column per digit. When spinning, each strip is long enough to roll
+  // through `spins` full 0–9 cycles before resting on the target digit.
+  const buildOdometer = (digits, spin) => {
     signupEl.textContent = "";
     odoCols = [];
+    const len = digits.length;
     const frag = document.createDocumentFragment();
     for (let i = 0; i < len; i++) {
       if (i > 0 && (len - i) % 3 === 0) {
@@ -212,49 +219,46 @@
         sep.className = "odometer__sep"; sep.textContent = ",";
         frag.appendChild(sep);
       }
+      const spins = spin ? SPINS_BASE + i * SPIN_STEP : 0;
+      const target = spins * 10 + digits[i]; // resting index in the strip
       const col = document.createElement("span"); col.className = "odometer__col";
       const strip = document.createElement("span"); strip.className = "odometer__strip";
-      for (let d = 0; d < 10; d++) {
-        const b = document.createElement("b"); b.textContent = d; strip.appendChild(b);
+      for (let k = 0; k <= target; k++) {
+        const b = document.createElement("b"); b.textContent = k % 10; strip.appendChild(b);
       }
-      col.appendChild(strip); col._strip = strip;
+      col.appendChild(strip);
+      col._strip = strip;
+      col._target = target;
+      col._dur = spin ? DUR_BASE + i * DUR_STEP : 0;
       frag.appendChild(col); odoCols.push(col);
     }
-    signupEl.appendChild(frag); // strips rest at digit 0 (translateY 0)
-    odoLen = len;
+    signupEl.appendChild(frag); // strips rest at index 0 (showing 0)
   };
 
-  // Roll every column to the digits of n; rebuilds when the width changes.
-  const rollTo = (n, animate) => {
+  // Show n. When animate, every column spins from 0 up to its digit.
+  const spinTo = (n, animate) => {
     if (!signupEl) return;
     signups = n;
-    const str = String(Math.max(0, Math.round(n)));
-    const rebuilt = str.length !== odoLen;
-    if (rebuilt) buildOdometer(str.length);
+    const digits = String(Math.max(0, Math.round(n))).split("").map(Number);
+    const spin = animate && !reduce;
+    buildOdometer(digits, spin);
     const apply = () => {
-      for (let i = 0; i < odoCols.length; i++) {
-        odoCols[i]._strip.style.transform = "translateY(-" + Number(str[i]) + "em)";
+      for (const col of odoCols) {
+        if (col._dur) col._strip.style.transition = "transform " + col._dur + "s var(--ease-slide)";
+        col._strip.style.transform = "translateY(-" + col._target + "em)";
       }
     };
-    if (animate && !reduce) {
-      if (rebuilt) void signupEl.offsetWidth; // commit the zero state before rolling
-      requestAnimationFrame(apply);
-    } else {
-      for (const c of odoCols) c._strip.style.transition = "none";
-      apply();
-      void signupEl.offsetWidth;
-      for (const c of odoCols) c._strip.style.transition = "";
-    }
+    if (spin) { void signupEl.offsetWidth; requestAnimationFrame(apply); } // commit zero, then roll
+    else { apply(); }
     if (odoA11y) odoA11y.textContent = " " + groupNum(n) + " ";
   };
 
   if (signupEl) {
-    buildOdometer(String(Math.max(0, fallbackCount)).length); // zeros at ~final width
-    if (odoA11y) odoA11y.textContent = " 0 ";
+    spinTo(0, false); // start showing 0
     fetch(SIGNUPS_API, { headers: { Accept: "application/json" } })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => rollTo(d && typeof d.count === "number" ? d.count : fallbackCount, true))
-      .catch(() => rollTo(fallbackCount, true));
+      .then((d) => spinTo(d && typeof d.count === "number" ? d.count : fallbackCount, true))
+      .catch(() => spinTo(fallbackCount, true));
   }
 
   /* ---- Email capture ======================================================
@@ -321,8 +325,8 @@
               body: JSON.stringify({ email, _gotcha: gotcha ? gotcha.value : "" }),
             })
               .then((r) => (r.ok ? r.json() : null))
-              .then((d) => rollTo(d && typeof d.count === "number" ? d.count : signups + 1, true))
-              .catch(() => rollTo(signups + 1, true));
+              .then((d) => spinTo(d && typeof d.count === "number" ? d.count : signups + 1, true))
+              .catch(() => spinTo(signups + 1, true));
           }
         } else {
           if (btn) { btn.disabled = false; btn.textContent = label; }
