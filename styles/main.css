@@ -457,21 +457,21 @@ kbd {
   position: absolute;
   left: clamp(0.7rem, 0.2rem + 1.6vw, 1.5rem);
   white-space: nowrap;
-  font-family: var(--font-serif); font-style: italic;
-  font-size: clamp(1rem, 0.6rem + 1.5vw, 1.85rem); line-height: 1;
-  padding: 0.4em 0.9em; border-radius: var(--r-sm);
-  background: rgba(4, 23, 17, 0.62);
-  -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  font-family: var(--font-sans); font-weight: 600;
+  font-size: clamp(0.95rem, 0.6rem + 1.3vw, 1.65rem); line-height: 1;
+  padding: 0.42em 0.95em; border-radius: var(--r-sm);
 }
 .demo-video__label--before {
   top: clamp(0.7rem, 0.2rem + 1.6vw, 1.5rem);
   color: var(--cream);
+  background: var(--green-950);
   border: 1px solid rgba(234, 244, 236, 0.3);
 }
 .demo-video__label--after {
-  top: 57%;
-  color: var(--green-300);
-  border: 1px solid rgba(31, 194, 133, 0.5);
+  top: 62%;
+  color: var(--accent-ink);
+  background: var(--green-400);
+  border: 1px solid rgba(4, 40, 29, 0.25);
 }
 .demo-video__sound {
   position: absolute; z-index: 2;
