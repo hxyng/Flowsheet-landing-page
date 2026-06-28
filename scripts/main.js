@@ -189,23 +189,40 @@
   }
 
   /* ---- Social-proof counter ===============================================
-     Counts up to the starting number on load (set via data-signups in the
-     HTML), and ticks +1 whenever someone joins from this page.              */
+     The number is real: it comes from /api/signups (Upstash-backed). The
+     data-signups attribute is only a fallback so the page never shows a
+     broken value if the API is briefly unreachable. The count animates up
+     to the real total on load and to the new total when someone joins.      */
+  const SIGNUPS_API = "/api/signups";
   const signupEl = document.querySelector("[data-signups]");
-  let signups = signupEl ? parseInt(signupEl.dataset.signups, 10) || 0 : 0;
+  const fallbackCount = signupEl ? parseInt(signupEl.dataset.signups, 10) || 0 : 0;
+  let signups = fallbackCount;
   const groupNum = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const renderSignups = (n) => { if (signupEl) signupEl.textContent = groupNum(n); };
+  const currentShown = () =>
+    signupEl ? parseInt(signupEl.textContent.replace(/[^\d]/g, ""), 10) || 0 : 0;
+  // Ease a real count-up from whatever is on screen to the target.
+  const animateSignups = (target, dur) => {
+    signups = target;
+    if (!signupEl) return;
+    if (reduce || !dur) { renderSignups(target); return; }
+    const from = currentShown(), t0 = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      renderSignups(Math.round(from + (target - from) * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
   if (signupEl) {
-    if (reduce) { renderSignups(signups); }
-    else {
-      const target = signups, t0 = performance.now(), dur = 1500;
-      const tick = (now) => {
-        const p = Math.min(1, (now - t0) / dur);
-        renderSignups(Math.round(target * (1 - Math.pow(1 - p, 3))));
-        if (p < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }
+    renderSignups(0);
+    fetch(SIGNUPS_API, { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const real = d && typeof d.count === "number" ? d.count : fallbackCount;
+        animateSignups(real, 1500);
+      })
+      .catch(() => animateSignups(fallbackCount, 1500));
   }
 
   /* ---- Email capture ======================================================
@@ -242,10 +259,13 @@
       if (n && n.classList.contains("form-note")) n.remove();
     };
 
+    const gotcha = form.querySelector("[name='_gotcha']");
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!input || !input.checkValidity()) { if (input) input.reportValidity(); return; }
       if (!formReady) { setNote("Add your form endpoint in scripts/main.js."); return; }
+      const email = input.value.trim();
       clearNote();
       if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
       try {
@@ -260,7 +280,18 @@
           done.setAttribute("role", "status");
           done.textContent = "Thanks, you're on the list.";
           form.replaceWith(done); // swap the whole form for a clean confirmation
-          if (signupEl) { signups += 1; renderSignups(signups); } // bump the live count
+          // Record in our own counter (deduped server-side) and show the new
+          // real total; fall back to a local +1 if the counter API is down.
+          if (signupEl) {
+            fetch(SIGNUPS_API, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ email, _gotcha: gotcha ? gotcha.value : "" }),
+            })
+              .then((r) => (r.ok ? r.json() : null))
+              .then((d) => animateSignups(d && typeof d.count === "number" ? d.count : signups + 1, 700))
+              .catch(() => animateSignups(signups + 1, 700));
+          }
         } else {
           if (btn) { btn.disabled = false; btn.textContent = label; }
           setNote("Something went wrong. Please try again.");
