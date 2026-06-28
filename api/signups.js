@@ -2,14 +2,14 @@
    /api/signups  —  the live early-access counter + readable signup store.
 
    GET   -> { count }                        current total (public)
-   GET   ?token=ADMIN  -> { count, emails }   the actual list (admin only)
+   GET   ?token=ADMIN  -> { count, emails }   the list of addresses (admin only)
    POST  { email }  -> { count }             record a signup, return new total
 
    Storage: Upstash Redis (via its REST API, no npm dependency needed).
-     - HASH flowsheet:emails  maps lowercased email -> { email, at }. It is the
-       single source of truth: it deduplicates by address, and its size IS the
-       count. Read it in the Upstash console (HGETALL flowsheet:emails) or via
-       the token-protected admin GET below.
+     - SET flowsheet:emails  holds just the email addresses, nothing else. It
+       deduplicates by address, and its size IS the count. Read it in the
+       Upstash console (SMEMBERS flowsheet:emails) or via the token-protected
+       admin GET below.
      - Displayed count = SIGNUPS_BASE + number of stored emails.
 
    Env vars (Vercel → Project → Settings → Environment Variables):
@@ -25,7 +25,7 @@ const REST_TOKEN =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || "";
 const BASE = parseInt(process.env.SIGNUPS_BASE || "0", 10) || 0;
 const ADMIN_TOKEN = process.env.SIGNUPS_ADMIN_TOKEN || "";
-const EMAILS_KEY = "flowsheet:emails"; // HASH emailLower -> { email, at }
+const EMAILS_KEY = "flowsheet:emails"; // SET of email addresses
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -45,7 +45,7 @@ async function redis(...cmd) {
 }
 
 // The live count is just how many emails we hold, plus the optional base.
-const liveCount = async () => BASE + ((await redis("HLEN", EMAILS_KEY)) || 0);
+const liveCount = async () => BASE + ((await redis("SCARD", EMAILS_KEY)) || 0);
 
 // Vercel parses JSON bodies, but read the raw stream as a fallback.
 async function readBody(req) {
@@ -70,21 +70,14 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === "GET") {
-      // Admin view: with the right secret token, return the actual addresses.
+      // Admin view: with the right secret token, return the addresses.
       const token =
         (req.query && req.query.token) ||
         (() => { try { return new URL(req.url, "http://x").searchParams.get("token"); } catch { return null; } })() ||
         req.headers["x-admin-token"] ||
         "";
       if (ADMIN_TOKEN && token === ADMIN_TOKEN) {
-        const flat = (await redis("HGETALL", EMAILS_KEY)) || [];
-        const emails = [];
-        for (let i = 0; i < flat.length; i += 2) {
-          let rec;
-          try { rec = JSON.parse(flat[i + 1]); } catch { rec = { email: flat[i], at: null }; }
-          emails.push(rec);
-        }
-        emails.sort((a, b) => String(a.at || "").localeCompare(String(b.at || "")));
+        const emails = ((await redis("SMEMBERS", EMAILS_KEY)) || []).slice().sort();
         return res.status(200).json({ count: BASE + emails.length, total: emails.length, emails });
       }
 
@@ -104,14 +97,8 @@ module.exports = async (req, res) => {
         return res.status(400).json({ count: await liveCount(), error: "invalid email" });
       }
 
-      // Store the plaintext address keyed by lowercased email, so it dedupes
-      // itself and the hash size stays equal to the real signup count.
-      await redis(
-        "HSET",
-        EMAILS_KEY,
-        email.toLowerCase(),
-        JSON.stringify({ email, at: new Date().toISOString() })
-      );
+      // Store just the address (lowercased so it dedupes itself).
+      await redis("SADD", EMAILS_KEY, email.toLowerCase());
       return res.status(200).json({ count: await liveCount() });
     }
 

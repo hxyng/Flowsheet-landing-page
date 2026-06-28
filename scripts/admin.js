@@ -30,37 +30,21 @@
     return h || "";
   };
 
-  const fmt = (iso) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (isNaN(d)) return "";
-    return d.toLocaleString(undefined, {
-      month: "short", day: "numeric", year: "numeric",
-      hour: "numeric", minute: "2-digit",
-    });
-  };
-
   const esc = (s) =>
     String(s).replace(/[&<>"']/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   const render = (emails) => {
-    // newest first
-    const list = emails.slice().sort((a, b) =>
-      String(b.at || "").localeCompare(String(a.at || "")));
+    const list = emails.slice().sort();
     countEl.textContent = list.length.toLocaleString();
     emptyEl.hidden = list.length > 0;
     rowsEl.innerHTML = list
-      .map((r) => {
-        const fresh = r.email && !seen.has(r.email.toLowerCase()) && seen.size > 0;
-        return (
-          '<tr class="' + (fresh ? "fresh" : "") + '">' +
-          '<td class="email">' + esc(r.email || "") + "</td>" +
-          '<td class="when">' + esc(fmt(r.at)) + "</td></tr>"
-        );
+      .map((email) => {
+        const fresh = email && !seen.has(email.toLowerCase()) && seen.size > 0;
+        return '<tr class="' + (fresh ? "fresh" : "") + '"><td class="email">' + esc(email) + "</td></tr>";
       })
       .join("");
-    seen = new Set(list.map((r) => (r.email || "").toLowerCase()));
+    seen = new Set(list.map((e) => e.toLowerCase()));
   };
 
   const tick = async () => {
