@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Flowsheet — signups</title>
+  <style>
+    :root { --bg:#f3f7f2; --ink:#10231a; --muted:#5b6b62; --line:#dfe7e1; --green:#1f7a4d; --card:#fff; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink);
+      font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+    .wrap { max-width:760px; margin:0 auto; padding:2.5rem 1.25rem 4rem; }
+    h1 { font-size:1.4rem; margin:0 0 .25rem; }
+    .sub { color:var(--muted); margin:0 0 1.5rem; }
+    .gate, .panel { background:var(--card); border:1px solid var(--line);
+      border-radius:14px; padding:1.25rem; }
+    .gate { display:none; }
+    .gate.show { display:block; }
+    label { display:block; font-weight:600; margin-bottom:.4rem; }
+    input { width:100%; padding:.7rem .8rem; border:1px solid var(--line);
+      border-radius:9px; font-size:1rem; background:#fbfdfb; }
+    button { margin-top:.8rem; padding:.65rem 1.1rem; border:0; border-radius:9px;
+      background:var(--green); color:#fff; font-weight:600; cursor:pointer; }
+    button.ghost { background:transparent; color:var(--green); border:1px solid var(--line);
+      padding:.4rem .8rem; margin:0; font-weight:600; }
+    .bar { display:flex; align-items:center; justify-content:space-between; gap:1rem;
+      margin-bottom:1rem; }
+    .count { font-size:2rem; font-weight:700; letter-spacing:-.02em; }
+    .count small { display:block; font-size:.8rem; font-weight:500; color:var(--muted);
+      letter-spacing:0; }
+    .dot { display:inline-block; width:8px; height:8px; border-radius:50%;
+      background:var(--green); margin-right:.4rem; vertical-align:middle; }
+    .live { color:var(--muted); font-size:.85rem; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { text-align:left; padding:.6rem .5rem; border-bottom:1px solid var(--line);
+      font-size:.92rem; }
+    th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase;
+      letter-spacing:.04em; }
+    td.email { font-weight:600; }
+    td.when { color:var(--muted); white-space:nowrap; }
+    tr.fresh td { animation:flash 1.4s ease; }
+    @keyframes flash { from { background:#e3f3ea; } to { background:transparent; } }
+    .empty, .err { color:var(--muted); padding:1rem 0; }
+    .err { color:#b3261e; }
+    .panel { display:none; }
+    .panel.show { display:block; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Signups</h1>
+    <p class="sub">Private list of everyone who joined the early-access form.</p>
+
+    <form class="gate" data-gate>
+      <label for="tok">Admin token</label>
+      <input id="tok" type="password" autocomplete="off"
+        placeholder="your SIGNUPS_ADMIN_TOKEN" data-token />
+      <button type="submit">View signups</button>
+      <p class="err" data-gate-err hidden></p>
+    </form>
+
+    <section class="panel" data-panel>
+      <div class="bar">
+        <div class="count"><span data-count>0</span><small>total signups</small></div>
+        <div>
+          <span class="live"><span class="dot"></span><span data-live>live</span></span>
+          <button class="ghost" type="button" data-forget>Sign out</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Email</th><th>Joined</th></tr></thead>
+        <tbody data-rows></tbody>
+      </table>
+      <p class="empty" data-empty hidden>No signups yet. Submit the form on the site and it will appear here.</p>
+    </section>
+  </div>
+  <script src="/scripts/admin.js"></script>
+</body>
+</html>

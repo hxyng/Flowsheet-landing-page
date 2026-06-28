@@ -1,21 +1,27 @@
 /* ===========================================================================
-   /api/signups  —  the live, accurate early-access counter.
+   /api/signups  —  the live, accurate early-access counter + signup store.
 
-   GET   -> { count }                      current real total
+   GET   -> { count }                      current real total (public)
+   GET   ?token=ADMIN  -> { count, emails } the actual list (admin only)
    POST  { email }  -> { count }           record a signup, return new total
 
    Storage: Upstash Redis (via its REST API, no npm dependency needed).
-     - We store ONLY a salted SHA-256 hash of each email in a Redis SET, so
-       the count deduplicates itself and Upstash never holds a real address.
-       (Plaintext emails go to Formspree, which is where you read them.)
+     - SET  flowsheet:signups  holds a salted SHA-256 hash of each email, used
+       for the self-deduplicating count.
+     - HASH flowsheet:emails   holds the PLAINTEXT address of each signup, so
+       you can actually read who joined (in the Upstash console, or via the
+       token-protected admin GET below). Only set this if you want emails
+       stored here as well as in Formspree.
      - Displayed count = SIGNUPS_BASE (your historical total) + unique signups.
 
    Required env vars (Vercel → Project → Settings → Environment Variables):
      UPSTASH_REDIS_REST_URL    set automatically by the Upstash integration
      UPSTASH_REDIS_REST_TOKEN  set automatically by the Upstash integration
    Optional:
-     SIGNUPS_BASE   integer seed = your current real signup total (default 0)
-     SIGNUPS_SALT   any random string; makes the stored hashes unguessable
+     SIGNUPS_BASE          integer seed = your current real signup total (default 0)
+     SIGNUPS_SALT          any random string; makes the stored hashes unguessable
+     SIGNUPS_ADMIN_TOKEN   secret; GET /api/signups?token=THAT returns the email
+                           list. Without it, the email list is never exposed.
    =========================================================================== */
 
 const crypto = require("crypto");
@@ -26,7 +32,9 @@ const REST_TOKEN =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || "";
 const BASE = parseInt(process.env.SIGNUPS_BASE || "0", 10) || 0;
 const SALT = process.env.SIGNUPS_SALT || "";
-const KEY = "flowsheet:signups"; // SET of salted email hashes
+const ADMIN_TOKEN = process.env.SIGNUPS_ADMIN_TOKEN || "";
+const KEY = "flowsheet:signups"; // SET of salted email hashes (the count)
+const EMAILS_KEY = "flowsheet:emails"; // HASH emailLower -> { email, at } (readable list)
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -72,6 +80,25 @@ module.exports = async (req, res) => {
   try {
     if (req.method === "GET") {
       const n = (await redis("SCARD", KEY)) || 0;
+
+      // Admin view: with the right secret token, return the actual addresses.
+      const token =
+        (req.query && req.query.token) ||
+        (() => { try { return new URL(req.url, "http://x").searchParams.get("token"); } catch { return null; } })() ||
+        req.headers["x-admin-token"] ||
+        "";
+      if (ADMIN_TOKEN && token === ADMIN_TOKEN) {
+        const flat = (await redis("HGETALL", EMAILS_KEY)) || [];
+        const emails = [];
+        for (let i = 0; i < flat.length; i += 2) {
+          let rec;
+          try { rec = JSON.parse(flat[i + 1]); } catch { rec = { email: flat[i], at: null }; }
+          emails.push(rec);
+        }
+        emails.sort((a, b) => String(a.at || "").localeCompare(String(b.at || "")));
+        return res.status(200).json({ count: BASE + n, total: emails.length, emails });
+      }
+
       return res.status(200).json({ count: BASE + n });
     }
 
@@ -90,7 +117,15 @@ module.exports = async (req, res) => {
         return res.status(400).json({ count: BASE + n, error: "invalid email" });
       }
 
-      await redis("SADD", KEY, hashEmail(email)); // dedupes by hash
+      await redis("SADD", KEY, hashEmail(email)); // dedupes the count by hash
+      // Store the plaintext address (keyed by lowercased email, so it dedupes
+      // too) so you can actually read who signed up.
+      await redis(
+        "HSET",
+        EMAILS_KEY,
+        email.toLowerCase(),
+        JSON.stringify({ email, at: new Date().toISOString() })
+      );
       const n = (await redis("SCARD", KEY)) || 0;
       return res.status(200).json({ count: BASE + n });
     }
