@@ -126,6 +126,13 @@ kbd {
   100% { box-shadow: 0 0 0 0 rgba(31, 194, 133, 0); }
 }
 
+/* Rolling-digit odometer for the live signup count */
+.odometer { display: inline-flex; align-items: center; line-height: 1; height: 1em; font-variant-numeric: tabular-nums; }
+.odometer__col { height: 1em; overflow: hidden; }
+.odometer__strip { display: flex; flex-direction: column; transition: transform 1.5s var(--ease-slide); will-change: transform; }
+.odometer__strip > b { flex: none; height: 1em; display: flex; align-items: center; justify-content: center; font-weight: inherit; }
+.odometer__sep { padding: 0 0.03em; }
+
 /* Form confirmation + error note (kept out of the button so it never wraps) */
 .form-success {
   display: inline-flex; align-items: center; gap: 0.5rem;

@@ -61,8 +61,8 @@
           Type a shorthand like <code class="tk">ebitda[q3]</code> in any document. Flowsheet drops in the
           live value, with a receipt showing where it came from.
         </p>
-        <!-- Social-proof counter: change the starting number via data-signups -->
-        <p class="hero__count reveal" data-delay="2">Join <strong><span data-signups="1240">0</span>+</strong> on the early access list</p>
+        <!-- Social-proof counter: real total from /api/signups; data-signups is the fallback seed -->
+        <p class="hero__count reveal" data-delay="2">Join <strong><span class="odometer" data-signups="1240" aria-hidden="true">1,240</span><span class="visually-hidden" data-signups-a11y> 1,240 </span></strong> on the early access list</p>
         <!-- Email capture (set your endpoint once in scripts/main.js → FORM_ENDPOINT) -->
         <form class="hero__form reveal" data-delay="3" data-form method="POST">
           <input type="email" name="email" placeholder="you@company.com" autocomplete="email" required aria-label="Work email" />

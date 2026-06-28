@@ -188,41 +188,73 @@
     if (lockBtn) lockBtn.addEventListener("click", lock);
   }
 
-  /* ---- Social-proof counter ===============================================
-     The number is real: it comes from /api/signups (Upstash-backed). The
-     data-signups attribute is only a fallback so the page never shows a
-     broken value if the API is briefly unreachable. The count animates up
-     to the real total on load and to the new total when someone joins.      */
+  /* ---- Social-proof counter (rolling-digit odometer) ======================
+     The number is real: it comes from /api/signups (Upstash-backed). Each
+     digit rolls into place — up from zero to the live total on load, and to
+     the new total when someone joins. data-signups is only a fallback so the
+     page never shows a broken value if the API is briefly unreachable.       */
   const SIGNUPS_API = "/api/signups";
-  const signupEl = document.querySelector("[data-signups]");
+  const signupEl = document.querySelector(".odometer");
+  const odoA11y = document.querySelector("[data-signups-a11y]");
   const fallbackCount = signupEl ? parseInt(signupEl.dataset.signups, 10) || 0 : 0;
   let signups = fallbackCount;
   const groupNum = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const renderSignups = (n) => { if (signupEl) signupEl.textContent = groupNum(n); };
-  const currentShown = () =>
-    signupEl ? parseInt(signupEl.textContent.replace(/[^\d]/g, ""), 10) || 0 : 0;
-  // Ease a real count-up from whatever is on screen to the target.
-  const animateSignups = (target, dur) => {
-    signups = target;
-    if (!signupEl) return;
-    if (reduce || !dur) { renderSignups(target); return; }
-    const from = currentShown(), t0 = performance.now();
-    const tick = (now) => {
-      const p = Math.min(1, (now - t0) / dur);
-      renderSignups(Math.round(from + (target - from) * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+  let odoCols = [], odoLen = 0;
+
+  // Build one column (a vertical 0–9 strip) per digit, with comma separators.
+  const buildOdometer = (len) => {
+    signupEl.textContent = "";
+    odoCols = [];
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < len; i++) {
+      if (i > 0 && (len - i) % 3 === 0) {
+        const sep = document.createElement("span");
+        sep.className = "odometer__sep"; sep.textContent = ",";
+        frag.appendChild(sep);
+      }
+      const col = document.createElement("span"); col.className = "odometer__col";
+      const strip = document.createElement("span"); strip.className = "odometer__strip";
+      for (let d = 0; d < 10; d++) {
+        const b = document.createElement("b"); b.textContent = d; strip.appendChild(b);
+      }
+      col.appendChild(strip); col._strip = strip;
+      frag.appendChild(col); odoCols.push(col);
+    }
+    signupEl.appendChild(frag); // strips rest at digit 0 (translateY 0)
+    odoLen = len;
   };
+
+  // Roll every column to the digits of n; rebuilds when the width changes.
+  const rollTo = (n, animate) => {
+    if (!signupEl) return;
+    signups = n;
+    const str = String(Math.max(0, Math.round(n)));
+    const rebuilt = str.length !== odoLen;
+    if (rebuilt) buildOdometer(str.length);
+    const apply = () => {
+      for (let i = 0; i < odoCols.length; i++) {
+        odoCols[i]._strip.style.transform = "translateY(-" + Number(str[i]) + "em)";
+      }
+    };
+    if (animate && !reduce) {
+      if (rebuilt) void signupEl.offsetWidth; // commit the zero state before rolling
+      requestAnimationFrame(apply);
+    } else {
+      for (const c of odoCols) c._strip.style.transition = "none";
+      apply();
+      void signupEl.offsetWidth;
+      for (const c of odoCols) c._strip.style.transition = "";
+    }
+    if (odoA11y) odoA11y.textContent = " " + groupNum(n) + " ";
+  };
+
   if (signupEl) {
-    renderSignups(0);
+    buildOdometer(String(Math.max(0, fallbackCount)).length); // zeros at ~final width
+    if (odoA11y) odoA11y.textContent = " 0 ";
     fetch(SIGNUPS_API, { headers: { Accept: "application/json" } })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        const real = d && typeof d.count === "number" ? d.count : fallbackCount;
-        animateSignups(real, 1500);
-      })
-      .catch(() => animateSignups(fallbackCount, 1500));
+      .then((d) => rollTo(d && typeof d.count === "number" ? d.count : fallbackCount, true))
+      .catch(() => rollTo(fallbackCount, true));
   }
 
   /* ---- Email capture ======================================================
@@ -289,8 +321,8 @@
               body: JSON.stringify({ email, _gotcha: gotcha ? gotcha.value : "" }),
             })
               .then((r) => (r.ok ? r.json() : null))
-              .then((d) => animateSignups(d && typeof d.count === "number" ? d.count : signups + 1, 700))
-              .catch(() => animateSignups(signups + 1, 700));
+              .then((d) => rollTo(d && typeof d.count === "number" ? d.count : signups + 1, true))
+              .catch(() => rollTo(signups + 1, true));
           }
         } else {
           if (btn) { btn.disabled = false; btn.textContent = label; }
