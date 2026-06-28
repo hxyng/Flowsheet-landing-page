@@ -254,11 +254,24 @@
   };
 
   if (signupEl) {
+    const fetchCount = () =>
+      fetch(SIGNUPS_API, { headers: { Accept: "application/json" }, cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => (d && typeof d.count === "number" ? d.count : null))
+        .catch(() => null);
+
     spinTo(0, false); // start showing 0
-    fetch(SIGNUPS_API, { headers: { Accept: "application/json" } })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => spinTo(d && typeof d.count === "number" ? d.count : fallbackCount, true))
-      .catch(() => spinTo(fallbackCount, true));
+    fetchCount().then((n) => spinTo(n == null ? fallbackCount : n, true));
+
+    // Live updates: re-check every 20s and re-roll only when the number
+    // actually changes. Skips while the tab is hidden, refreshes on return.
+    const POLL_MS = 20000;
+    const poll = () => {
+      if (document.hidden) return;
+      fetchCount().then((n) => { if (n != null && n !== signups) spinTo(n, true); });
+    };
+    setInterval(poll, POLL_MS);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
   }
 
   /* ---- Email capture ======================================================

@@ -1,40 +1,31 @@
 /* ===========================================================================
-   /api/signups  —  the live, accurate early-access counter + signup store.
+   /api/signups  —  the live early-access counter + readable signup store.
 
-   GET   -> { count }                      current real total (public)
-   GET   ?token=ADMIN  -> { count, emails } the actual list (admin only)
-   POST  { email }  -> { count }           record a signup, return new total
+   GET   -> { count }                        current total (public)
+   GET   ?token=ADMIN  -> { count, emails }   the actual list (admin only)
+   POST  { email }  -> { count }             record a signup, return new total
 
    Storage: Upstash Redis (via its REST API, no npm dependency needed).
-     - SET  flowsheet:signups  holds a salted SHA-256 hash of each email, used
-       for the self-deduplicating count.
-     - HASH flowsheet:emails   holds the PLAINTEXT address of each signup, so
-       you can actually read who joined (in the Upstash console, or via the
-       token-protected admin GET below). Only set this if you want emails
-       stored here as well as in Formspree.
-     - Displayed count = SIGNUPS_BASE (your historical total) + unique signups.
+     - HASH flowsheet:emails  maps lowercased email -> { email, at }. It is the
+       single source of truth: it deduplicates by address, and its size IS the
+       count. Read it in the Upstash console (HGETALL flowsheet:emails) or via
+       the token-protected admin GET below.
+     - Displayed count = SIGNUPS_BASE + number of stored emails.
 
-   Required env vars (Vercel → Project → Settings → Environment Variables):
-     UPSTASH_REDIS_REST_URL    set automatically by the Upstash integration
-     UPSTASH_REDIS_REST_TOKEN  set automatically by the Upstash integration
-   Optional:
-     SIGNUPS_BASE          integer seed = your current real signup total (default 0)
-     SIGNUPS_SALT          any random string; makes the stored hashes unguessable
+   Env vars (Vercel → Project → Settings → Environment Variables):
+     UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN   (or the KV_REST_API_* pair)
+     SIGNUPS_BASE          optional integer added to the live count (default 0)
      SIGNUPS_ADMIN_TOKEN   secret; GET /api/signups?token=THAT returns the email
-                           list. Without it, the email list is never exposed.
+                           list. Without it, the list is never exposed.
    =========================================================================== */
-
-const crypto = require("crypto");
 
 const REST_URL =
   process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || "";
 const REST_TOKEN =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || "";
 const BASE = parseInt(process.env.SIGNUPS_BASE || "0", 10) || 0;
-const SALT = process.env.SIGNUPS_SALT || "";
 const ADMIN_TOKEN = process.env.SIGNUPS_ADMIN_TOKEN || "";
-const KEY = "flowsheet:signups"; // SET of salted email hashes (the count)
-const EMAILS_KEY = "flowsheet:emails"; // HASH emailLower -> { email, at } (readable list)
+const EMAILS_KEY = "flowsheet:emails"; // HASH emailLower -> { email, at }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -53,8 +44,8 @@ async function redis(...cmd) {
   return data.result;
 }
 
-const hashEmail = (email) =>
-  crypto.createHash("sha256").update(SALT + email.trim().toLowerCase()).digest("hex");
+// The live count is just how many emails we hold, plus the optional base.
+const liveCount = async () => BASE + ((await redis("HLEN", EMAILS_KEY)) || 0);
 
 // Vercel parses JSON bodies, but read the raw stream as a fallback.
 async function readBody(req) {
@@ -79,8 +70,6 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === "GET") {
-      const n = (await redis("SCARD", KEY)) || 0;
-
       // Admin view: with the right secret token, return the actual addresses.
       const token =
         (req.query && req.query.token) ||
@@ -96,10 +85,10 @@ module.exports = async (req, res) => {
           emails.push(rec);
         }
         emails.sort((a, b) => String(a.at || "").localeCompare(String(b.at || "")));
-        return res.status(200).json({ count: BASE + n, total: emails.length, emails });
+        return res.status(200).json({ count: BASE + emails.length, total: emails.length, emails });
       }
 
-      return res.status(200).json({ count: BASE + n });
+      return res.status(200).json({ count: await liveCount() });
     }
 
     if (req.method === "POST") {
@@ -108,26 +97,22 @@ module.exports = async (req, res) => {
 
       // Honeypot: bots fill the hidden field. Silently ignore, return current.
       if (body._gotcha) {
-        const n = (await redis("SCARD", KEY)) || 0;
-        return res.status(200).json({ count: BASE + n });
+        return res.status(200).json({ count: await liveCount() });
       }
 
       if (!EMAIL_RE.test(email)) {
-        const n = (await redis("SCARD", KEY)) || 0;
-        return res.status(400).json({ count: BASE + n, error: "invalid email" });
+        return res.status(400).json({ count: await liveCount(), error: "invalid email" });
       }
 
-      await redis("SADD", KEY, hashEmail(email)); // dedupes the count by hash
-      // Store the plaintext address (keyed by lowercased email, so it dedupes
-      // too) so you can actually read who signed up.
+      // Store the plaintext address keyed by lowercased email, so it dedupes
+      // itself and the hash size stays equal to the real signup count.
       await redis(
         "HSET",
         EMAILS_KEY,
         email.toLowerCase(),
         JSON.stringify({ email, at: new Date().toISOString() })
       );
-      const n = (await redis("SCARD", KEY)) || 0;
-      return res.status(200).json({ count: BASE + n });
+      return res.status(200).json({ count: await liveCount() });
     }
 
     res.setHeader("Allow", "GET, POST");

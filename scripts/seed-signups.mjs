@@ -68,12 +68,45 @@ const LAST = [
   "Patel","Chen","Wang","Singh","Khan","Ali","Shah","Tran","Yang","Park",
 ];
 
-/* domains weighted toward what real consumer signups actually use */
-const DOMAINS = [
+/* domains weighted toward what real consumer signups actually use. These are
+   all mainstream, reliable inbox providers; the disposable blocklist check
+   below guarantees none of them are throwaway domains. */
+let DOMAINS = [
   ["gmail.com", 46], ["yahoo.com", 16], ["outlook.com", 11], ["hotmail.com", 9],
   ["icloud.com", 8], ["aol.com", 4], ["proton.me", 2], ["msn.com", 1.5],
   ["live.com", 1.5], ["comcast.net", 0.5],
 ];
+
+const BLOCKLIST_URL =
+  "https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/disposable_email_blocklist.conf";
+
+// Drop any pool domain that appears on the disposable-email blocklist, so every
+// generated address uses a real, reliable provider. Falls back to the curated
+// pool (already clean) if the list can't be fetched.
+async function keepReliableDomains(pairs) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch(BLOCKLIST_URL, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("status " + res.status);
+    const text = await res.text();
+    const block = new Set(
+      text.split(/\r?\n/).map((s) => s.trim().toLowerCase()).filter((s) => s && !s.startsWith("#"))
+    );
+    const kept = pairs.filter(([d]) => !block.has(d.toLowerCase()));
+    const dropped = pairs.filter(([d]) => block.has(d.toLowerCase())).map(([d]) => d);
+    console.log(
+      `Disposable blocklist: ${block.size} domains loaded. ` +
+      (dropped.length ? `Removed ${dropped.join(", ")}. ` : "Pool is all clean. ") +
+      `Using ${kept.length} reliable domains.`
+    );
+    return kept.length ? kept : pairs;
+  } catch (e) {
+    console.warn(`Blocklist fetch failed (${e.message}); using the curated reliable pool as-is.`);
+    return pairs;
+  }
+}
 
 /* ---- tiny random helpers ------------------------------------------------- */
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -228,6 +261,7 @@ const reals = readReals();
 const count = realOnly
   ? reals.length
   : parseInt(args.find((a) => /^\d+$/.test(a)) || "200", 10);
+DOMAINS = await keepReliableDomains(DOMAINS); // verify against the blocklist
 const rows = generate(count, reals);
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
