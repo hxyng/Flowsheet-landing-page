@@ -448,6 +448,31 @@ kbd {
   will-change: transform;
 }
 .demo-video__media { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Before/after overlay: a labelled box at the top-left of each half. The
+   video's split sits a little below center, so the "With" label is nudged
+   past the midline to land at the top of the lower half. */
+.demo-video__labels { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.demo-video__label {
+  position: absolute;
+  left: clamp(0.7rem, 0.2rem + 1.6vw, 1.5rem);
+  white-space: nowrap;
+  font-family: var(--font-serif); font-style: italic;
+  font-size: clamp(1rem, 0.6rem + 1.5vw, 1.85rem); line-height: 1;
+  padding: 0.4em 0.9em; border-radius: var(--r-sm);
+  background: rgba(4, 23, 17, 0.62);
+  -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+}
+.demo-video__label--before {
+  top: clamp(0.7rem, 0.2rem + 1.6vw, 1.5rem);
+  color: var(--cream);
+  border: 1px solid rgba(234, 244, 236, 0.3);
+}
+.demo-video__label--after {
+  top: 57%;
+  color: var(--green-300);
+  border: 1px solid rgba(31, 194, 133, 0.5);
+}
 .demo-video__sound {
   position: absolute; z-index: 2;
   right: clamp(0.7rem, 0.4rem + 0.8vw, 1.15rem);
